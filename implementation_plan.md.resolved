@@ -1,0 +1,55 @@
+# Lumiu Implementation Plan
+
+Lumiu is a sensory-safe, AI-powered learning platform designed for neurodivergent learners. This plan outlines the development phases, technical architecture, and design principles.
+
+## 🌟 Vision & Goals
+- **Inclusivity:** Accessible design for ADHD, dyslexia, and autism.
+- **Sensory-Safe:** Muted colors, minimal animations, no guilt-based pressure.
+- **Growth-Oriented:** Galaxy-themed progress visualization.
+- **Offline-First:** PWA with local synchronization.
+
+## 🛠️ Technical Stack
+- **Frontend:** Next.js (App Router), React, Vanilla CSS / CSS Modules.
+- **Backend:** Node.js, PostgreSQL (via Prisma or similar).
+- **AI:** Modular AI service for quiz generation.
+- **Offline:** Service Workers, LocalStorage/IndexedDB.
+- **Fonts:** Dyslexia-friendly typography (e.g., OpenDyslexic fallback, sans-serifs).
+
+## 🗺️ Roadmap
+
+### Phase 1: Foundation & Design System (Completed)
+- [x] Initialize Next.js project.
+- [x] Establish CSS Variables for muted blues/greens.
+- [x] Setup core layouts (Calm Navigation).
+- [x] Implement Galaxy Background (Stars as tasks).
+
+### Phase 2: Core Learning Features (Completed)
+- [x] Subject-based Decks & Flashcards/Notes (UI).
+- [x] Spaced Repetition Visuals.
+- [x] Focus Mode with Timer and Distraction-free toggle.
+- [x] Galaxy Universe Dashboard.
+
+### Phase 3: AI & PWA Integration
+- [ ] AI Quiz generator (MCQ, T/F, Fill-in-blanks).
+- [ ] Manifest and Service Worker setup.
+- [ ] Offline data sync.
+
+### Phase 4: Polish & Accessibility
+- [ ] Dyslexia-friendly font toggles.
+- [ ] Adjustable text size/spacing controls.
+- [ ] 2D Fallback mode for performance.
+
+## 🎨 Design System
+### Colors
+- **Backgrounds:** Deep midnight blue (calm, not black).
+- **Accents:** Muted turquoise (#72a0a8), Soft Sage (#b8c9b9), Lavender Grey (#a6a6c4).
+- **Text:** High contrast but soft (Off-white/Light Grey).
+
+### Typography
+- Primary: Inter or Outfit.
+- Accessible: OpenDyslexic.
+
+## 🚀 Execution Strategy
+- Start with the **Galaxy Home Screen** to set the aesthetic tone.
+- Implement **Deck/Flashcard** system with local storage first for immediate PWA feel.
+- Integrate **AI** as a background service.
