@@ -61,8 +61,8 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
                         {[
                             { title: "AI Quiz Master", color: "bg-purple-100", icon: "✨", href: "/dashboard/ai-quiz", subtitle: "Generate custom learning" },
-                            { title: `${crystals} Knowledge Crystals`, color: "bg-blue-100", icon: "💎", href: "#", subtitle: "Fully synced offline" },
-                            { title: "Learning Path", color: "bg-indigo-100", icon: "🛣️", href: "#", subtitle: "Click to resume" },
+                            { title: "ADHD Insights", color: "bg-orange-100", icon: "📊", href: "/dashboard/insights", subtitle: "Explore research data" },
+                            { title: "Knowledge Path", color: "bg-indigo-100", icon: "🛣️", href: "#", subtitle: `${crystals} Knowledge Crystals` },
                         ].map((card) => (
                             card.href !== "#" ? (
                                 <Link href={card.href} key={card.title} className={`${card.color} p-8 rounded-[30px] transition-transform hover:scale-105 cursor-pointer block text-[#1e1b4b] no-underline`}>

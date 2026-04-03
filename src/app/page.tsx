@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { LumiuWordmark } from "@/components/LumiuWordmark";
 
 export default function Home() {
   const [isLoggedin, setIsLoggedin] = useState(() => {
@@ -95,9 +96,9 @@ export default function Home() {
       {/* 🧭 Top Navigation */}
       <div className="relative z-50 w-full flex items-center justify-center px-16 py-10">
         <div className="w-full max-w-[1600px] flex items-center justify-between">
-          <div className="text-4xl font-black tracking-tighter text-white select-none">
-            Lumiu<span className="text-[#a855f7]">.</span>
-          </div>
+          <Link href="/">
+            <LumiuWordmark size="md" />
+          </Link>
 
           <div className="flex items-center gap-16">
             <Link href="/" style={navLinkStyle} className="hover:text-white">Home</Link>

@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AccessibilityProvider } from "@/context/AccessibilityContext";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
+import { LunaFloatingButton } from "@/components/LunaFloatingButton";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
             {children}
           </main>
           <AccessibilityWidget />
+          <LunaFloatingButton />
         </AccessibilityProvider>
       </body>
     </html>
