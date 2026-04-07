@@ -16,75 +16,57 @@ export default function AIQuizGeneratorPage() {
     const [quizData, setQuizData] = useState<any[]>([]);
     const [recommendedDifficulty, setRecommendedDifficulty] = useState<"Gentle" | "Normal" | "Challenge">("Gentle");
     const [isAnalyzingFocus, setIsAnalyzingFocus] = useState(false);
-    const [performanceMetrics, setPerformanceMetrics] = useState<{focus: number, organization: number} | null>(null);
+    const [performanceMetrics, setPerformanceMetrics] = useState<{focus: number, organization: number, aiTrainedInsight?: string} | null>(null);
     const [showInsight, setShowInsight] = useState(false);
 
-    // Performance Tracking & Adaptability Engine
-    useEffect(() => {
-        // Load performance data from local storage
-        const performanceStats = JSON.parse(localStorage.getItem("lumiu-performance") || '{"avgScore": 0, "totalQuizzes": 0, "lastDifficulty": "Gentle", "totalScore": 0}');
-        
-        let recommended: "Gentle" | "Normal" | "Challenge" = "Gentle";
-
-        if (performanceStats.totalQuizzes > 0) {
-            const successRate = performanceStats.totalScore / (performanceStats.totalQuizzes * 5); // Assuming 5 questions per quiz
+    const handleAnalyzeFocus = async () => {
+        setIsAnalyzingFocus(true);
+        try {
+            // Get user's local performance
+            const stats = JSON.parse(localStorage.getItem("lumiu-performance") || '{"avgScore": 0, "totalQuizzes": 0, "lastDifficulty": "Gentle", "totalScore": 0}');
+            // Normalize score assuming 5 questions per quiz.
+            const currentAvgScore = stats.totalQuizzes > 0 ? (stats.totalScore / (stats.totalQuizzes * 5)) : 0.6;
             
-            if (successRate >= 0.8) {
-                // User is doing great, level up!
-                if (performanceStats.lastDifficulty === "Gentle") recommended = "Normal";
-                else recommended = "Challenge";
-            } else if (successRate <= 0.4) {
-                // User is struggling, level down.
-                if (performanceStats.lastDifficulty === "Challenge") recommended = "Normal";
-                else recommended = "Gentle";
-            } else {
-                // Stay at current level
-                recommended = performanceStats.lastDifficulty;
-            }
-        }
+            // Connect strictly to the backend Adaptability Engine which queries the Kaggle dataset
+            const response = await fetch("/api/adaptability", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentAvgScore })
+            });
 
-        setRecommendedDifficulty(recommended);
-        setDifficulty(recommended);
+            if (!response.ok) throw new Error("Adaptability Engine backend connection failed.");
+
+            const data = await response.json();
+            
+            setPerformanceMetrics({ focus: data.focus, organization: data.organization, aiTrainedInsight: data.aiTrainedInsight });
+            setDifficulty(data.recommendedDifficulty);
+            setRecommendedDifficulty(data.recommendedDifficulty);
+            setShowInsight(true);
+        } catch (error) {
+            console.error("Adaptability Error:", error);
+            // Safe fallback if server is unreachable
+            setRecommendedDifficulty("Gentle");
+            setDifficulty("Gentle");
+        } finally {
+            setIsAnalyzingFocus(false);
+        }
+    };
+
+    // Replace component mount auto-fetch with manual scan if desired, but for now we define both.
+    useEffect(() => {
+        // We can either fetch on mount, or wait for user to click the button.
+        // Assuming we want the user to trigger the scan manually via `handleAnalyzeFocus`:
+        // If we want it on mount, we can call handleAnalyzeFocus(). Let's just leave it empty if we want the button to appear.
     }, []);
 
     const updatePerformance = (finalScore: number) => {
         const stats = JSON.parse(localStorage.getItem("lumiu-performance") || '{"avgScore": 0, "totalQuizzes": 0, "lastDifficulty": "Gentle", "totalScore": 0}');
-        
-        const newStats = {
-            totalQuizzes: stats.totalQuizzes + 1,
-            totalScore: stats.totalScore + finalScore,
-            lastDifficulty: difficulty,
-            avgScore: (stats.totalScore + finalScore) / (stats.totalQuizzes + 1)
-        };
-        
-        localStorage.setItem("lumiu-performance", JSON.stringify(newStats));
-    };
-
-    const handleAnalyzeFocus = () => {
-        setIsAnalyzingFocus(true);
-        // Simulate a 3-second focus analysis
-        setTimeout(() => {
-            // Generate random but "cleaner" metrics inspired by the 4-classes dataset
-            // Focus Score Video (0-10), Difficulty Organizing Tasks (0-1)
-            const focus = Math.floor(Math.random() * 6) + 3; // 3-9
-            const organization = parseFloat((Math.random() * 0.8 + 0.1).toFixed(2)); // 0.1-0.9
-            
-            setPerformanceMetrics({ focus, organization });
-            setIsAnalyzingFocus(false);
-            setShowInsight(true);
-
-            // Logic: High focus + Low difficulty = Challenge
-            if (focus > 7 && organization < 0.3) {
-                setDifficulty("Challenge");
-                setRecommendedDifficulty("Challenge");
-            } else if (focus < 5 || organization > 0.6) {
-                setDifficulty("Gentle");
-                setRecommendedDifficulty("Gentle");
-            } else {
-                setDifficulty("Normal");
-                setRecommendedDifficulty("Normal");
-            }
-        }, 3000);
+        stats.totalQuizzes += 1;
+        stats.totalScore += finalScore;
+        stats.lastDifficulty = difficulty;
+        // Approximation: normalize to 0-1 range based on quiz length
+        stats.avgScore = stats.totalScore / (stats.totalQuizzes * (quizData.length || 5));
+        localStorage.setItem("lumiu-performance", JSON.stringify(stats));
     };
 
     const handleGenerate = async (e: React.FormEvent) => {
@@ -303,6 +285,12 @@ export default function AIQuizGeneratorPage() {
                                                 <div className="mt-4 pt-4 border-t border-white/5 text-[10px] italic text-emerald-400/60 text-center font-bold">
                                                     Difficulty auto-calibrated to {difficulty}
                                                 </div>
+                                                {performanceMetrics!.aiTrainedInsight && (
+                                                    <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">AI Model Training Insight</span>
+                                                        <p className="text-xs text-white/70 italic">&quot;{performanceMetrics!.aiTrainedInsight}&quot;</p>
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         )}
 

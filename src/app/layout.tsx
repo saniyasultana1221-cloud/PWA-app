@@ -4,6 +4,7 @@ import "./globals.css";
 import { AccessibilityProvider } from "@/context/AccessibilityContext";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
 import { LunaFloatingButton } from "@/components/LunaFloatingButton";
+import { OfflineSyncManager } from "@/components/OfflineSyncManager";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.variable} ${inter.variable}`}>
         <AccessibilityProvider>
+          <OfflineSyncManager />
           <div className="stars"></div>
           <main className="main-content">
             {children}
