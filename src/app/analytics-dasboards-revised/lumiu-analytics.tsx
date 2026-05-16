@@ -1,4 +1,7 @@
+"use client";
+
 import { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Range = "7d" | "30d" | "90d";
@@ -219,12 +222,17 @@ function StreakCalendar({ T }: { T: any }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function LumIUAnalytics() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const [range, setRange] = useState<Range>("7d");
   const [tab, setTab] = useState<Tab>("overview");
   const [insightIdx, setInsightIdx] = useState(0);
   const [animIn, setAnimIn] = useState(false);
   const [studyView, setStudyView] = useState<"daily"|"weekly">("daily");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Generate data based on range
   const n = range === "7d" ? 7 : range === "30d" ? 30 : 90;
@@ -860,13 +868,17 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
     </div>
   );
 
+  if (!mounted) return null;
+
   return (
     <>
       <style>{css}</style>
       <div className="lad-root">
         {/* Topbar */}
         <div className="lad-topbar">
-          <div className="lad-logo"><div className="lad-logo-dot"/>lumiu</div>
+          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+            <div className="lad-logo" style={{ cursor: 'pointer' }}><div className="lad-logo-dot"/>lumiu</div>
+          </Link>
           <span className="lad-badge">Analytics</span>
 
           <div className="lad-tabs">
@@ -882,7 +894,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                 <button key={r} className={`range-btn ${range===r?"active":""}`} onClick={()=>setRange(r)}>{r==="7d"?"7 days":r==="30d"?"30 days":"90 days"}</button>
               ))}
             </div>
-            <button className="dl-btn">⬇ Export Report</button>
+            <button className="dl-btn" onClick={() => window.print()}>⬇ Export Report</button>
             <button className="dark-toggle" onClick={()=>setIsDark(!isDark)}>
               {isDark?"🌙":"☀️"}
               <div className="tog-track"><div className="tog-thumb"/></div>
@@ -910,7 +922,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
             <div className="insight-dots">
               {INSIGHTS.map((_,i)=><div key={i} className="insight-dot" style={{ opacity:i===insightIdx?1:0.25 }}/>)}
             </div>
-            <button className="dl-btn" style={{ flexShrink:0 }}>⬇ Export</button>
+            <button className="dl-btn" style={{ flexShrink:0 }} onClick={() => window.print()}>⬇ Export</button>
           </div>
 
           {/* Tab content */}
