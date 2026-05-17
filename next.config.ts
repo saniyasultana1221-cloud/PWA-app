@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const withPWA = require("next-pwa");
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.0.167', 'localhost', '127.0.0.1'],
   turbopack: {},
   compress: true,
   reactStrictMode: true,
