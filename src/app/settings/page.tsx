@@ -1,4 +1,6 @@
+"use client";
 import { useState, useCallback } from "react";
+import { useSettings } from "@/context/SettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Theme = "light" | "dark";
@@ -279,9 +281,24 @@ const SECTIONS: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function LumIUSettings() {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [activeSection, setActiveSection] =
-    useState<SettingsSection>("appearance");
+  const {
+    theme, accentColor, fontScale, fontFamily, borderRadius, sidebarCollapsed, compactMode, backgroundPattern,
+    displayName, email, updateSettings
+  } = useSettings();
+
+  const setTheme = (v: any) => updateSettings({ theme: v });
+  const setAccentColor = (v: any) => updateSettings({ accentColor: v });
+  const setFontScale = (v: any) => updateSettings({ fontScale: v });
+  const setFontFamily = (v: any) => updateSettings({ fontFamily: v });
+  const setBorderRadius = (v: any) => updateSettings({ borderRadius: v });
+  const setSidebarCollapsed = (v: any) => updateSettings({ sidebarCollapsed: v });
+  const setCompactMode = (v: any) => updateSettings({ compactMode: v });
+  const setBackgroundPattern = (v: any) => updateSettings({ backgroundPattern: v });
+  
+  const setDisplayName = (v: any) => updateSettings({ displayName: v });
+  const setEmail = (v: any) => updateSettings({ email: v });
+
+  const [activeSection, setActiveSection] = useState<SettingsSection>("appearance");
   const [saved, setSaved] = useState(false);
 
   const showSaved = useCallback(() => {
@@ -289,14 +306,7 @@ export default function LumIUSettings() {
     setTimeout(() => setSaved(false), 2000);
   }, []);
 
-  // ── Appearance ───────────────────────────────────────────────────────────
-  const [accentColor, setAccentColor] = useState("#9D79FF");
-  const [fontScale, setFontScale] = useState(1.0);
-  const [fontFamily, setFontFamily] = useState("chillax");
-  const [borderRadius, setBorderRadius] = useState("rounded");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [compactMode, setCompactMode] = useState(false);
-  const [backgroundPattern, setBackgroundPattern] = useState("stars");
+  // ── Appearance (connected to global store) ───────────────────────────────
 
   // ── Accessibility ────────────────────────────────────────────────────────
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -348,9 +358,7 @@ export default function LumIUSettings() {
   const [shareProgress, setShareProgress] = useState(false);
   const [crashReports, setCrashReports] = useState(true);
 
-  // ── Account ───────────────────────────────────────────────────────────────
-  const [displayName, setDisplayName] = useState("Sania");
-  const [email, setEmail] = useState("sania@lumiu.app");
+  // ── Account (connected to global store) ───────────────────────────────
   const [editingName, setEditingName] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [nameInput, setNameInput] = useState(displayName);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type CardStatus = "new" | "learning" | "review" | "mastered";
@@ -69,10 +69,17 @@ const THEMES: Record<CardTheme,{label:string;gradient:string;accent:string;star:
 
 // ─── StarField ────────────────────────────────────────────────────────────────
 function StarField({count=40}:{count?:number}) {
-  const s = useRef(Array.from({length:count},()=>({x:Math.random()*100,y:Math.random()*100,r:0.3+Math.random()*1.1,delay:Math.random()*4,dur:2+Math.random()*3})));
+  const [stars, setStars] = useState<{x:number,y:number,r:number,delay:number,dur:number}[]>([]);
+  
+  useEffect(() => {
+    setStars(Array.from({length:count},()=>({x:Math.random()*100,y:Math.random()*100,r:0.3+Math.random()*1.1,delay:Math.random()*4,dur:2+Math.random()*3})));
+  }, [count]);
+
+  if (stars.length === 0) return null;
+
   return (
     <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}>
-      {s.current.map((st,i)=>(
+      {stars.map((st,i)=>(
         <circle key={i} cx={`${st.x}%`} cy={`${st.y}%`} r={st.r} fill="white" opacity={0.35}>
           <animate attributeName="opacity" values="0.15;0.8;0.15" dur={`${st.dur}s`} begin={`${st.delay}s`} repeatCount="indefinite"/>
         </circle>
@@ -196,10 +203,23 @@ export default function LumIUFlashcards() {
   };
 
   // ─── ai calls ─────────────────────────────────────────────────────────────
-  const callAI = async (prompt:string, maxTokens=1000) => {
-    const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,messages:[{role:"user",content:prompt}]})});
+  const callAI = async (prompt:string, maxTokens=8192) => {
+    const apiKey = "AIzaSyBTntB_5Gn1juvDX_40iY5-R2GLNICbXaI";
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens, responseMimeType: "application/json" }
+      })
+    });
     const d = await r.json();
-    return JSON.parse((d.content?.[0]?.text??"[]").replace(/```json|```/g,"").trim());
+    if (d.error) {
+      console.error("Gemini API Error:", d.error);
+      throw new Error(d.error.message);
+    }
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    return JSON.parse(text.replace(/```json|```/g,"").trim());
   };
   const makeCards = (parsed:{front:string;back:string;hint:string;tags:string[]}[], startOrder=0): Flashcard[] => {
     const keys = Object.keys(THEMES) as CardTheme[];

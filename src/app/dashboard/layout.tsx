@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-    Home, Moon, Maximize, Asterisk,
-    Settings, UserCircle, FileText, Presentation, Layers, Zap
+    Home, Moon, Maximize, Orbit,
+    Settings, UserCircle, FileText, Presentation, Layers, Zap, LineChart
 } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,20 +19,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, []);
 
     const mainModules = [
-        { name: "Dashboard", icon: Home, href: "/dashboard", active: pathname === "/dashboard" },
+        { name: "Home", icon: Home, href: "/dashboard", active: pathname === "/dashboard" },
         { name: "Luna", icon: Moon, href: "/luna", active: pathname === "/luna" },
         { name: "Focus Mode", icon: Maximize, href: "/focus", active: pathname === "/focus" },
-        { name: "GoK", icon: Asterisk, href: "/galaxy", active: pathname === "/galaxy" },
-        { name: "Analytics", icon: UserCircle, href: "/dashboard/student", active: pathname === "/dashboard/student" },
+        { name: "Gok", icon: Orbit, href: "/galaxy", active: pathname === "/galaxy" },
         { name: "Notes", icon: FileText, href: "/notes", active: pathname === "/notes" },
-        { name: "Whiteboard", icon: Presentation, href: "/whiteboard", active: pathname === "/whiteboard" },
-        { name: "Flashcards", icon: Layers, href: "/flashcards", active: pathname === "/flashcards" },
+        { name: "flashcards", icon: Layers, href: "/flashcards", active: pathname === "/flashcards" },
+        { name: "whiteboard", icon: Presentation, href: "/whiteboard", active: pathname === "/whiteboard" },
         { name: "Neural", icon: Zap, href: "/gamification", active: pathname === "/gamification" },
-    ];
-
-    const bottomModules = [
-        { name: "Profile", icon: UserCircle, href: "#" },
-        { name: "Settings", icon: Settings, href: "#" },
+        { name: "Analytics", icon: LineChart, href: "/dashboard/student", active: pathname === "/dashboard/student" },
+        { name: "Profile", icon: UserCircle, href: "/profile", active: pathname === "/profile" },
+        { name: "Settings", icon: Settings, href: "/settings", active: pathname === "/settings" },
     ];
 
     return (
@@ -59,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Link>
                 </div>
                 
-                <nav className="flex flex-col gap-2 flex-1">
+                <nav className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0 pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
                     {mainModules.map((mod) => (
                         <Link 
                             href={mod.href} 
@@ -75,21 +72,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </Link>
                     ))}
                 </nav>
-
-                <div className="flex flex-col gap-2 mt-auto">
-                    {bottomModules.map((mod) => (
-                        <Link 
-                            href={mod.href} 
-                            key={mod.name}
-                            className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white/10 opacity-80 transition-all text-white hover:text-white"
-                        >
-                            <mod.icon size={22} strokeWidth={2} className="shrink-0" />
-                            <span className="text-[15px] tracking-[0.05em]">
-                                {mod.name}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
             </aside>
 
             {/* Content Area */}

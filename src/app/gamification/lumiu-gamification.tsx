@@ -821,16 +821,17 @@ function ConceptDropGame({T, isDark, addXp, goBack}: any) {
   const handleSlice = (blockId:string, e: React.MouseEvent<HTMLDivElement>)=>{
     e.stopPropagation();
     const target = CONCEPTS[targetIdx % CONCEPTS.length];
+    const clientX = e.clientX;
+    const clientY = e.clientY;
     setBlocks(prev=>prev.map(b=>{
       if(b.id!==blockId||b.sliceState!=="idle") return b;
       const correct = b.isTarget;
       playSlice(correct);
       // Add ripple
-      const rect = e.currentTarget.getBoundingClientRect();
       const arenaRect = arenaRef.current?.getBoundingClientRect();
       if(arenaRect){
-        const rx = e.clientX - arenaRect.left;
-        const ry = e.clientY - arenaRect.top;
+        const rx = clientX - arenaRect.left;
+        const ry = clientY - arenaRect.top;
         const rid = uid();
         setRipples(r=>[...r,{id:rid,x:rx,y:ry}]);
         setTimeout(()=>setRipples(r=>r.filter(rp=>rp.id!==rid)),600);
