@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Play, RotateCcw, Volume2, VolumeX, Activity, Zap, Target } from "lucide-react";
 
-const CATEGORIES = {
+const CATEGORIES: Record<string, string[]> = {
     "Web Development": ["React", "HTML", "CSS", "Next.js", "Vite", "Node.js", "Tailwind", "API"],
     "Neural Networks": ["Neuron", "Weights", "Bias", "Activation", "Layer", "Backprop", "Loss", "Epoch"],
     "Psychology": ["Behavior", "Cognition", "Memory", "Emotion", "Social", "Clinical", "Developmental", "Sensation"]
@@ -20,11 +20,11 @@ export default function BeatSaberGame() {
     const [combo, setCombo] = useState(0);
     const [maxCombo, setMaxCombo] = useState(0);
     const [category, setCategory] = useState("Web Development");
-    const [blocks, setBlocks] = useState([]);
+    const [blocks, setBlocks] = useState<{id: number, text: string, isCorrect: boolean, left: number}[]>([]);
     const [isMuted, setIsMuted] = useState(false);
     const [speed, setSpeed] = useState(3000); // Animation duration in ms
     
-    const audioRef = useRef(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const gameContainerRef = useRef(null);
 
     // Initialize audio
@@ -57,7 +57,7 @@ export default function BeatSaberGame() {
         setMaxCombo(0);
         setBlocks([]);
         setSpeed(3000);
-        if (!isMuted) audioRef.current.play();
+        if (!isMuted && audioRef.current) audioRef.current.play();
         
         // Pick a random category
         const cats = Object.keys(CATEGORIES);
@@ -85,7 +85,7 @@ export default function BeatSaberGame() {
         }, speed);
     };
 
-    const handleSlice = (block) => {
+    const handleSlice = (block: {id: number, text: string, isCorrect: boolean, left: number}) => {
         if (block.isCorrect) {
             setScore(prev => prev + (10 * (combo + 1)));
             setCombo(prev => {

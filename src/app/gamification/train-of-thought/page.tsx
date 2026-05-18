@@ -31,7 +31,7 @@ export default function NeuralGame() {
         return () => clearInterval(timer);
     }, [timeLeft, gameState]);
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: any) => {
         if (e.key === "Enter") {
             // Mock logic for connection
             setScore(prev => prev + 10);

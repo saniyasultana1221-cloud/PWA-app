@@ -10,7 +10,7 @@ const SAMPLE_TEXT = "The mitochondria is the powerhouse of the cell. It generate
 export default function TypeRacerGame() {
     const router = useRouter();
     const [input, setInput] = useState("");
-    const [startTime, setStartTime] = useState(null);
+    const [startTime, setStartTime] = useState<number | null>(null);
     const [wpm, setWpm] = useState(0);
     const [accuracy, setAccuracy] = useState(100);
     const [isFinished, setIsFinished] = useState(false);
@@ -27,7 +27,7 @@ export default function TypeRacerGame() {
         }
     }, [startTime, isFinished, input]);
 
-    const handleInput = (e) => {
+    const handleInput = (e: any) => {
         const value = e.target.value;
         if (!startTime) setStartTime(Date.now());
         

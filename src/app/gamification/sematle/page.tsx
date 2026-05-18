@@ -8,7 +8,7 @@ import { ChevronLeft, Target, Zap, Search, ArrowUpRight, Check } from "lucide-re
 export default function SemanticSprint() {
     const router = useRouter();
     const [input, setInput] = useState("");
-    const [attempts, setAttempts] = useState([]);
+    const [attempts, setAttempts] = useState<{text: string, score: number}[]>([]);
     const [score, setScore] = useState(0);
 
     const handleGuess = () => {

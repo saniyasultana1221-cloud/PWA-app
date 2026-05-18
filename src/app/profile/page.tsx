@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useSettings } from "@/context/SettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ interface Avatar {
   id: AvatarId;
   name: string;
   category: "pixel" | "constellation" | "galaxy";
-  render: (size: number, accent: string, isDark: boolean) => JSX.Element;
+  render: (size: number, accent: string, isDark: boolean) => React.JSX.Element;
 }
 
 const AVATARS: Avatar[] = [
@@ -606,7 +606,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
           <div className="pr-logo"><div className="pr-logo-dot"/>lumiu</div>
           <span className="pr-badge">Profile</span>
           <div className="pr-top-right">
-            <button className="tog-wrap" onClick={()=>setTheme(t=>t==="dark"?"light":"dark")}>
+            <button className="tog-wrap" onClick={()=>setTheme(theme==="dark"?"light":"dark")}>
               {theme==="dark"?"🌙":"☀️"}
               <div className="tog-track"><div className="tog-thumb"/></div>
               {theme==="dark"?"Dark":"Light"}

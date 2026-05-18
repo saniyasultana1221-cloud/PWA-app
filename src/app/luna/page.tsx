@@ -189,9 +189,20 @@ export default function LunaChatPage() {
                                         remarkPlugins={[remarkGfm]}
                                         components={{
                                             p: ({node, ...props}) => <p style={{ margin: "0 0 16px 0", whiteSpace: "pre-wrap", lineHeight: "1.7" }} {...props} />,
-                                            strong: ({node, ...props}) => <strong style={{ fontWeight: 800, color: "#ffffff", letterSpacing: "0.2px" }} {...props} />,
+                                            strong: ({node, ...props}) => (
+                                                <strong style={{ 
+                                                    fontWeight: 800, 
+                                                    color: msg.role === "user" ? "#ffffff" : "#7e22ce", 
+                                                    letterSpacing: "0.2px" 
+                                                }} {...props} />
+                                            ),
                                             em: ({node, ...props}) => <em style={{ fontStyle: "italic" }} {...props} />,
-                                            a: ({node, ...props}) => <a style={{ color: "#d8b4fe", textDecoration: "underline" }} {...props} />,
+                                            a: ({node, ...props}) => (
+                                                <a style={{ 
+                                                    color: msg.role === "user" ? "#d8b4fe" : "#7e22ce", 
+                                                    textDecoration: "underline" 
+                                                }} {...props} />
+                                            ),
                                             ul: ({node, ...props}) => <ul style={{ paddingLeft: "24px", margin: "10px 0", listStyleType: "disc" }} {...props} />,
                                             ol: ({node, ...props}) => <ol style={{ paddingLeft: "24px", margin: "10px 0", listStyleType: "decimal" }} {...props} />,
                                             li: ({node, ...props}) => <li style={{ marginBottom: "8px", lineHeight: "1.7" }} {...props} />

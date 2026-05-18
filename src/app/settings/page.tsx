@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useSettings } from "@/context/SettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1115,7 +1115,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
     </div>
   );
 
-  const RENDERERS: Record<SettingsSection, () => JSX.Element> = {
+  const RENDERERS: Record<SettingsSection, () => React.JSX.Element> = {
     appearance: renderAppearance,
     accessibility: renderAccessibility,
     focus: renderFocus,
@@ -1144,7 +1144,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                 <span>✓</span> Saved
               </div>
             )}
-            <button className="tog-wrap" onClick={() => setTheme(t => t==="dark"?"light":"dark")}>
+            <button className="tog-wrap" onClick={() => setTheme(theme==="dark"?"light":"dark")}>
               {theme==="dark" ? "🌙" : "☀️"}
               <div className="tog-track"><div className="tog-thumb"/></div>
               {theme==="dark" ? "Dark" : "Light"}
