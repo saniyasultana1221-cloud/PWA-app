@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
+import {
     Home, Moon, Maximize, Orbit,
     Settings, UserCircle, FileText, Presentation, Layers, Zap, LineChart
 } from "lucide-react";
@@ -24,8 +24,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: "Focus Mode", icon: Maximize, href: "/focus", active: pathname === "/focus" },
         { name: "Gok", icon: Orbit, href: "/galaxy", active: pathname === "/galaxy" },
         { name: "Notes", icon: FileText, href: "/notes", active: pathname === "/notes" },
-        { name: "flashcards", icon: Layers, href: "/flashcards", active: pathname === "/flashcards" },
-        { name: "whiteboard", icon: Presentation, href: "/whiteboard", active: pathname === "/whiteboard" },
+        { name: "Flashcards", icon: Layers, href: "/flashcards", active: pathname === "/flashcards" },
+        { name: "Whiteboard", icon: Presentation, href: "/whiteboard", active: pathname === "/whiteboard" },
         { name: "Neural", icon: Zap, href: "/gamification", active: pathname === "/gamification" },
         { name: "Analytics", icon: LineChart, href: "/dashboard/student", active: pathname === "/dashboard/student" },
         { name: "Profile", icon: UserCircle, href: "/profile", active: pathname === "/profile" },
@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <div className="flex h-screen w-screen bg-[#130924] font-sans text-white overflow-hidden relative">
-            
+
             {/* Dark Sleek Teal & Purple Wave Gradient Background */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-gradient-to-br from-[#2a1352] via-[#150a28] to-[#150a28] opacity-100">
                 <div className="absolute top-[-30%] left-[-10%] w-[100%] h-[100%] bg-[#5d31a5] blur-[150px] rounded-full opacity-60 animate-orb-float" />
@@ -55,15 +55,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </h1>
                     </Link>
                 </div>
-                
+
                 <nav className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0 pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
                     {mainModules.map((mod) => (
-                        <Link 
-                            href={mod.href} 
+                        <Link
+                            href={mod.href}
                             key={mod.name}
-                            className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all ${
-                                mod.active ? 'bg-white/20 font-semibold shadow-sm' : 'hover:bg-white/10 opacity-80 text-white hover:text-white'
-                            }`}
+                            className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all ${mod.active ? 'bg-white/20 font-semibold shadow-sm' : 'hover:bg-white/10 opacity-80 text-white hover:text-white'
+                                }`}
                         >
                             <mod.icon size={22} strokeWidth={mod.active ? 2.5 : 2} className="shrink-0" />
                             <span className="text-[15px] tracking-[0.05em]">
