@@ -206,7 +206,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
       else fontSize = '12px';
     }
 
-    setToolbarState(prev => {
+    setToolbarState((prev: any) => {
       const next = {
         bold: editor.isActive('bold'),
         italic: editor.isActive('italic'),

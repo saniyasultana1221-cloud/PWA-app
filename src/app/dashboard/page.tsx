@@ -697,9 +697,6 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
 
         {/* ── Topbar ── */}
         <div className="lh-top">
-          <button className="lh-icon-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar">
-            ☰
-          </button>
           <div className="lh-logo">
             <div className="lh-logo-dot"/>
             lumiu
@@ -746,50 +743,14 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
         <div className="lh-body">
 
           {/* ── Sidebar ── */}
-          {sidebarOpen && (
-            <div className="lh-sidebar">
-              <div className="sb-label">Views</div>
-              {([
-                { id:"all",    icon:"🏠", label:"All Notes",    count: notes.length },
-                { id:"pinned", icon:"📌", label:"Pinned",       count: notes.filter(n=>n.pinned).length },
-                { id:"recent", icon:"🕐", label:"Recent",       count: recentNotes.length },
-                { id:"shared", icon:"🔗", label:"Shared",       count: notes.filter(n=>n.shared).length },
-              ] as {id:NoteCategory;icon:string;label:string;count:number}[]).map(v => (
-                <button key={v.id} className={`sb-btn ${category===v.id&&!selectedNotebook?"active":""}`}
-                  onClick={() => { setCategory(v.id); setSelectedNotebook(null); }}>
-                  <div className="sb-btn-icon" style={{background:category===v.id&&!selectedNotebook?"rgba(255,255,255,0.2)":"rgba(255,255,255,0.1)"}}>{v.icon}</div>
-                  {v.label}
-                  {v.count > 0 && <span className="sb-count">{v.count}</span>}
-                </button>
-              ))}
 
-              <div className="sb-divider"/>
-              <div className="sb-label">Notebooks</div>
-              {NOTEBOOKS.map(nb => (
-                <button key={nb} className={`sb-btn ${selectedNotebook===nb?"active":""}`}
-                  onClick={() => { setSelectedNotebook(nb); setCategory("all"); }}>
-                  <div className="sb-btn-icon" style={{background:selectedNotebook===nb?"rgba(255,255,255,0.2)":"rgba(255,255,255,0.1)"}}>
-                    {NOTEBOOK_ICONS[nb] || "📚"}
-                  </div>
-                  {nb}
-                  {NOTEBOOK_COUNTS[nb] > 0 && <span className="sb-count">{NOTEBOOK_COUNTS[nb]}</span>}
-                </button>
-              ))}
-
-              <div className="sb-divider"/>
-              <button className="sb-btn" onClick={() => {}}>
-                <div className="sb-btn-icon" style={{background:"rgba(255,255,255,0.1)"}}>🗑</div>
-                Trash
-              </button>
-            </div>
-          )}
 
           {/* ── Main content ── */}
           <div className="lh-main">
 
             {/* Hero — only show when not searching and showing all */}
             {!isSearching && !selectedNotebook && category === "all" && (
-              <>
+              <div style={{ display: 'contents' }}>
                 <div className="lh-hero">
                   <div className="lh-hero-text">
                     <div className="lh-greeting-line">
@@ -802,10 +763,8 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                       {LUMIU_MSGS[msgIdx]}
                     </div>
                   </div>
-                  <div className="lh-mascot-wrap">
-                    <LunaMascot size={110} isDark={isDark}/>
-                  </div>
                 </div>
+
 
                 {/* Quick stats */}
                 <div className="lh-quick-stats">
@@ -863,7 +822,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                     }
                   </div>
                 )}
-              </>
+              </div>
             )}
 
             {/* Filter / sort row */}

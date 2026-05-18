@@ -40,7 +40,77 @@ export default function LumIUGames() {
   const [game, setGame]   = useState<GameId>("hub");
   const [xp, setXp]       = useState(340);
 
-  const addXp = (amt: number) => setXp(p => p + amt);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedXp = localStorage.getItem("lumiu-xp");
+      if (storedXp) {
+        setXp(parseInt(storedXp));
+      } else {
+        localStorage.setItem("lumiu-xp", "340");
+      }
+    }
+  }, []);
+
+  const addXp = (amt: number, score?: number, metricDetail?: string) => {
+    setXp(p => {
+      const nextXp = p + amt;
+      localStorage.setItem("lumiu-xp", nextXp.toString());
+      return nextXp;
+    });
+
+    if (game !== "hub") {
+      const statsStr = localStorage.getItem("lumiu-game-stats") || "{}";
+      const stats = JSON.parse(statsStr);
+      
+      if (!stats[game]) {
+        const defaults: Record<string, any> = {
+          "lumosity": { plays: 34, avgScore: 87, bestScore: 18, xp: 1240, name: "Lumosity", icon: "🧠" },
+          "typeracer": { plays: 28, avgScore: 91, bestScore: 72, xp: 980, name: "TypeRacer", icon: "⌨️" },
+          "concept-drop": { plays: 41, avgScore: 76, bestScore: 14, xp: 1560, name: "Concept Drop", icon: "🎯" },
+          "semantic-sprint": { plays: 22, avgScore: 83, bestScore: 68, xp: 820, name: "Semantic Sprint", icon: "⚡" },
+          "echo-chamber": { plays: 19, avgScore: 79, bestScore: 74, xp: 700, name: "Echo Chamber", icon: "🔮" }
+        };
+        stats[game] = defaults[game] || { plays: 0, avgScore: 0, bestScore: 0, xp: 0 };
+      }
+      
+      const gStats = stats[game];
+      gStats.plays += 1;
+      gStats.xp += amt;
+      
+      const parsedScore = score !== undefined ? score : 80;
+      
+      gStats.avgScore = Math.round((gStats.avgScore * (gStats.plays - 1) + parsedScore) / gStats.plays);
+      
+      if (parsedScore > gStats.bestScore) {
+        gStats.bestScore = parsedScore;
+      }
+      
+      localStorage.setItem("lumiu-game-stats", JSON.stringify(stats));
+
+      const historyStr = localStorage.getItem("lumiu-game-history") || "[]";
+      const history = JSON.parse(historyStr);
+      
+      const gameNames: Record<string, string> = {
+        "lumosity": "Lumosity",
+        "typeracer": "TypeRacer",
+        "concept-drop": "Concept Drop",
+        "semantic-sprint": "Semantic Sprint",
+        "echo-chamber": "Echo Chamber"
+      };
+      
+      history.push({
+        timestamp: Date.now(),
+        gameId: game,
+        gameName: gameNames[game] || game,
+        score: parsedScore,
+        xp: amt,
+        detail: metricDetail || `score of ${parsedScore}`
+      });
+      
+      localStorage.setItem("lumiu-game-history", JSON.stringify(history));
+    }
+  };
+
   const isDark = theme === "dark";
   const level = Math.floor(xp / XP_PER_LEVEL) + 1;
   const xpInLevel = xp % XP_PER_LEVEL;
@@ -379,6 +449,14 @@ function LumosityGame({T, isDark, addXp, goBack}: any) {
     return ()=>clearInterval(iv);
   },[phase]);
 
+  useEffect(() => {
+    if (phase === "done") {
+      const xpEarned = chain.length * 18 + (chain.length >= 5 ? 50 : 0);
+      const scoreVal = chain.length > 0 ? Math.min(100, chain.length * 12 + 20) : 0;
+      addXp(xpEarned, scoreVal, `${chain.length} connections`);
+    }
+  }, [phase]);
+
   const submit = ()=>{
     if(!input.trim()) return;
     const val = input.trim().toLowerCase();
@@ -417,7 +495,6 @@ function LumosityGame({T, isDark, addXp, goBack}: any) {
 
   if(phase==="done") {
     const xpEarned = chain.length*18+(chain.length>=5?50:0);
-    addXp(xpEarned);
     return (
       <div className="game-shell">
         <div className="game-header"><button className="game-back" onClick={goBack}>←</button><div><div className="game-title">🧠 Lumosity — Complete</div></div></div>
@@ -529,7 +606,14 @@ function TypeRacerGame({T, isDark, addXp, goBack}: any) {
       setTimeout(()=>setFlashClass(""),350);
     }
     setTyped(val);
-    if(val===passage){ setPhase("done"); const xpEarned=Math.floor(wpm*accuracy/100*0.5); addXp(xpEarned); }
+    if(val===passage){
+      setPhase("done");
+      const elapsed = startTime ? (Date.now() - startTime) / 60000 : 0.1;
+      const wordCount = passage.trim().split(/\s+/).filter(Boolean).length;
+      const finalWpm = elapsed > 0 ? Math.round(wordCount / elapsed) : 60;
+      const xpEarned = Math.floor(finalWpm * acc / 100 * 0.5) + 30;
+      addXp(xpEarned, finalWpm, `${finalWpm} WPM / ${acc}% acc`);
+    }
   };
 
   const progress = passage.length>0?Math.round((typed.length/passage.length)*100):0;
@@ -670,6 +754,14 @@ function ConceptDropGame({T, isDark, addXp, goBack}: any) {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [sliced, setSliced] = useState(0);
+
+  useEffect(() => {
+    if (phase === "done") {
+      const xpEarned = score + maxCombo * 5;
+      const finalScore = Math.min(100, Math.round((score / 150) * 100));
+      addXp(xpEarned, finalScore, `${sliced} sliced / ${maxCombo}x combo`);
+    }
+  }, [phase]);
   const [missed, setMissed] = useState(0);
   const [dropSpeed, setDropSpeed] = useState(1.0);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -874,7 +966,6 @@ function ConceptDropGame({T, isDark, addXp, goBack}: any) {
 
   if(phase==="done"){
     const xpEarned = score + maxCombo*5;
-    addXp(xpEarned);
     return (
       <div className="game-shell">
         <div className="game-header"><button className="game-back" onClick={goBack}>←</button><div><div className="game-title">🎯 Concept Drop — Done</div></div></div>
@@ -1002,7 +1093,12 @@ function SemanticSprint({T, isDark, addXp, goBack}: any) {
   };
 
   const next = ()=>{
-    if(round+1>=TOTAL_ROUNDS){ addXp(Math.floor(score/6*0.5)); setPhase("done"); }
+    if(round+1>=TOTAL_ROUNDS){
+      const xpEarned = Math.floor(score/6*0.5) + 30;
+      const avgCloseness = Math.round(score/TOTAL_ROUNDS);
+      addXp(xpEarned, avgCloseness, `${avgCloseness}% semantic closeness`);
+      setPhase("done");
+    }
     else { setRound(r=>r+1); setInput(""); setHeatScore(0); setSubmitted(false); }
   };
 
@@ -1109,7 +1205,12 @@ function EchoChamber({T, isDark, addXp, goBack}: any) {
   };
 
   const next = ()=>{
-    if(round+1>=TOTAL_ROUNDS){ addXp(Math.floor(totalScore/TOTAL_ROUNDS*0.6)); setPhase("done"); }
+    if(round+1>=TOTAL_ROUNDS){
+      const xpEarned = Math.floor(totalScore/TOTAL_ROUNDS*0.6) + 30;
+      const avgRecall = Math.round(totalScore/TOTAL_ROUNDS);
+      addXp(xpEarned, avgRecall, `${avgRecall}% average recall`);
+      setPhase("done");
+    }
     else { setRound(r=>r+1); setInput(""); setShowTime(t=>Math.max(1,t-0.5)); setPhase("intro"); }
   };
 

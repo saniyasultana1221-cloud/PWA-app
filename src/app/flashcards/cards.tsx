@@ -145,6 +145,55 @@ export default function LumIUFlashcards() {
   const [appTheme, setAppTheme] = useState<"dark"|"light">("dark");
   const isDark = appTheme==="dark";
 
+  // ─── Persistence & Sync ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedDecks = localStorage.getItem("lumiu-decks");
+      const storedFolders = localStorage.getItem("lumiu-folders");
+      if (storedDecks) setDecks(JSON.parse(storedDecks));
+      if (storedFolders) setFolders(JSON.parse(storedFolders));
+      
+      const storedTheme = localStorage.getItem("lumiu-theme");
+      if (storedTheme) setAppTheme(storedTheme as "dark"|"light");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (decks !== SEED_DECKS) {
+      localStorage.setItem("lumiu-decks", JSON.stringify(decks));
+    }
+  }, [decks]);
+
+  useEffect(() => {
+    if (folders !== SEED_FOLDERS) {
+      localStorage.setItem("lumiu-folders", JSON.stringify(folders));
+    }
+  }, [folders]);
+
+  useEffect(() => {
+    if (studyDone && activeDeck) {
+      const xpEarned = studyQueue.length * 20 + 20; // 20 XP per card + 20 completion XP
+      
+      // Central XP sync
+      const currentXp = parseInt(localStorage.getItem("lumiu-xp") || "340");
+      localStorage.setItem("lumiu-xp", (currentXp + xpEarned).toString());
+
+      // Save to flashcard history
+      const history = JSON.parse(localStorage.getItem("lumiu-flashcard-history") || "[]");
+      const totalQuality = sessionStats.again * 0 + sessionStats.hard * 1 + sessionStats.good * 3 + sessionStats.easy * 5;
+      const accuracy = studyQueue.length > 0 ? Math.round((totalQuality / (studyQueue.length * 5)) * 100) : 80;
+      
+      history.push({
+        timestamp: Date.now(),
+        deckName: activeDeck.name,
+        cardsReviewed: studyQueue.length,
+        accuracy: accuracy,
+        xp: xpEarned
+      });
+      localStorage.setItem("lumiu-flashcard-history", JSON.stringify(history));
+    }
+  }, [studyDone]);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
 
@@ -204,7 +253,7 @@ export default function LumIUFlashcards() {
 
   // ─── ai calls ─────────────────────────────────────────────────────────────
   const callAI = async (prompt:string, maxTokens=8192) => {
-    const apiKey = "AIzaSyBTntB_5Gn1juvDX_40iY5-R2GLNICbXaI";
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -750,46 +799,16 @@ scrollbar-width:thin;scrollbar-color:${T.border} transparent;
               <div className="mlabel">Create manually</div>
               <div className="msubtext">Type your own Q&A</div>
             </button>
-            <button className="mbtn" onClick={()=>setMethodStep("paste")}>
-              <div className="micon" style={{background:"linear-gradient(135deg,#ec4899,#f43f5e)"}}>📋</div>
-              <div className="mlabel">Paste text</div>
-              <div className="msubtext">AI extracts cards</div>
-            </button>
+
             <button className="mbtn" onClick={()=>setMethodStep("ai-topic")}>
               <div className="micon" style={{background:"linear-gradient(135deg,#06b6d4,#3b82f6)"}}>✦</div>
               <div className="mlabel">AI generate</div>
               <div className="msubtext">Describe a topic</div>
             </button>
-            <button className="mbtn" onClick={()=>imgRef.current?.click()}>
-              <div className="micon" style={{background:"linear-gradient(135deg,#10b981,#059669)"}}>🖼️</div>
-              <div className="mlabel">Select images</div>
-              <div className="msubtext">AI reads your notes</div>
-            </button>
           </div>
-          <button className="mfull" onClick={()=>fileRef.current?.click()}>
-            <div className="mficon" style={{background:"linear-gradient(135deg,#f59e0b,#d97706)"}}>📄</div>
-            <div style={{textAlign:"left"}}>
-              <div className="mlabel" style={{marginBottom:2}}>Select file</div>
-              <div className="msubtext">.pdf, .docx, .pptx — AI extracts key facts</div>
-            </div>
-          </button>
-          <input ref={fileRef} type="file" accept=".pdf,.docx,.pptx" style={{display:"none"}} onChange={()=>alert("PDF parsing needs pdf.js — wire up in production!")}/>
-          <input ref={imgRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={()=>alert("Image OCR needs tesseract.js — wire up in production!")}/>
         </>}
 
-        {methodStep==="paste"&&<>
-          <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:15}}>
-            <button className="bbtn" style={{width:30,height:30,fontSize:13}} onClick={()=>setMethodStep("pick")}>←</button>
-            <div className="mtitle" style={{margin:0}}>Paste text</div>
-          </div>
-          <textarea className="fi" rows={8} placeholder="Paste your notes or textbook excerpt — AI will extract key concepts as flashcards." value={pasteText} onChange={e=>setPasteText(e.target.value)}/>
-          <div style={{display:"flex",gap:9,marginTop:13}}>
-            <button className="btnp" style={{flex:1}} onClick={generateFromPaste} disabled={pasteLoading||!pasteText.trim()}>
-              {pasteLoading?<span style={{display:"flex",alignItems:"center",gap:7,justifyContent:"center"}}><div style={{width:13,height:13,border:"2px solid rgba(255,255,255,0.3)",borderTopColor:"white",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Generating...</span>:"✦ Generate Cards"}
-            </button>
-            <button className="btns" onClick={()=>setMethodStep("pick")}>Cancel</button>
-          </div>
-        </>}
+
 
         {methodStep==="ai-topic"&&<>
           <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:15}}>
