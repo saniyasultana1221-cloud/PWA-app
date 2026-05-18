@@ -2,17 +2,17 @@
 import { useState, useRef, useEffect } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type CardStatus = "new" | "learning" | "review" | "mastered";
-type ViewMode = "library" | "study" | "create" | "edit" | "ai-generate";
-type CardTheme = "nebula" | "aurora" | "void" | "pulsar" | "comet" | "supernova" | "quasar" | "stardust";
+export type CardStatus = "new" | "learning" | "review" | "mastered";
+export type ViewMode = "library" | "study" | "create" | "edit" | "ai-generate";
+export type CardTheme = "nebula" | "aurora" | "void" | "pulsar" | "comet" | "supernova" | "quasar" | "stardust";
 
-interface Flashcard {
+export interface Flashcard {
   id: string; front: string; back: string; hint?: string;
   tags: string[]; theme: CardTheme; status: CardStatus;
   easeFactor: number; interval: number; nextReview: number;
   repetitions: number; createdAt: number; order: number;
 }
-interface Deck {
+export interface Deck {
   id: string; name: string; description: string; subject: string;
   theme: CardTheme; cards: Flashcard[]; createdAt: number; emoji: string; folderId: string | null;
 }
@@ -252,23 +252,19 @@ export default function LumIUFlashcards() {
   };
 
   // ─── ai calls ─────────────────────────────────────────────────────────────
-  const callAI = async (prompt:string, maxTokens=8192) => {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: maxTokens, responseMimeType: "application/json" }
-      })
+    const callAI = async (prompt:string, maxTokens=8192) => {
+    // Use server-side route to keep API key secret
+    const response = await fetch('/api/flashcards/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, maxTokens })
     });
-    const d = await r.json();
-    if (d.error) {
-      console.error("Gemini API Error:", d.error);
-      throw new Error(d.error.message);
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Gemini API Error:', data);
+      throw new Error(data.error || 'Failed to generate flashcards');
     }
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
-    return JSON.parse(text.replace(/```json|```/g,"").trim());
+    return data; // server already parses JSON array
   };
   const makeCards = (parsed:{front:string;back:string;hint:string;tags:string[]}[], startOrder=0): Flashcard[] => {
     const keys = Object.keys(THEMES) as CardTheme[];

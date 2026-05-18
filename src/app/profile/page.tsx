@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import type { Deck } from "@/app/flashcards/cards";
 import { useSettings } from "@/context/SettingsContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -347,12 +348,39 @@ export default function LumIUProfile() {
   const filteredAvatars = filterCat === "all" ? AVATARS : AVATARS.filter(a => a.category === filterCat);
 
   // ─── Deck preview data ────────────────────────────────────────────────────
-  const DECK_PREVIEW = [
-    { name:"Astrophysics 101", emoji:"🌌", cards:34, mastery:88, theme:"nebula" },
-    { name:"Linear Algebra",   emoji:"📐", cards:18, mastery:92, theme:"quasar" },
-    { name:"Organic Chem",     emoji:"⚗️", cards:22, mastery:61, theme:"pulsar" },
-    { name:"World History",    emoji:"🌍", cards:9,  mastery:45, theme:"stardust" },
-  ];
+// ─── Deck preview data (now loaded dynamically) ────────────────────────────────────────
+  const [profileDecks, setProfileDecks] = useState<Deck[]>([]);
+
+  // Load decks from localStorage on mount and whenever storage changes
+  useEffect(() => {
+    const load = () => {
+      const stored = localStorage.getItem("lumiu-decks");
+      if (stored) {
+        const parsed: Deck[] = JSON.parse(stored);
+        setProfileDecks(parsed);
+      }
+    };
+    load();
+    const handler = (e: StorageEvent) => {
+      if (e.key === "lumiu-decks") load();
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  // Compute deck preview data with mastery percentages
+  const DECK_PREVIEW = profileDecks.map(d => {
+    const total = d.cards.length;
+    const mastered = d.cards.filter(c => c.status === "mastered").length;
+    const mastery = total > 0 ? Math.round((mastered / total) * 100) : 0;
+    return {
+      name: d.name,
+      emoji: d.emoji,
+      cards: total,
+      mastery,
+      theme: d.theme,
+    };
+  });
 
   const css = `
 @import url('https://api.fontshare.com/v2/css?f[]=chillax@300,400,500,600,700&display=swap');
