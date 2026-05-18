@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Theme = "light" | "dark";
@@ -369,8 +370,88 @@ function NoteMenu({ note, T, onStar, onPin, onDelete, onClose }: any) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function LumIUHome() {
+  const router = useRouter();
   const [theme, setTheme]         = useState<Theme>("light");
   const [notes, setNotes]         = useState<NoteFile[]>(SEED_NOTES);
+
+  // Load notes dynamically from the notes store
+  useEffect(() => {
+    async function loadNotes() {
+      try {
+        let store: any = null;
+        if (typeof window !== "undefined") {
+          const getDB = () => {
+            return new Promise<IDBDatabase>((resolve, reject) => {
+              const request = indexedDB.open('LumiuDB', 1);
+              request.onupgradeneeded = () => {
+                if (!request.result.objectStoreNames.contains('keyval')) {
+                  request.result.createObjectStore('keyval');
+                }
+              };
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+          };
+          
+          const idbGet = async (key: string) => {
+            const db = await getDB();
+            return new Promise((resolve, reject) => {
+              const tx = db.transaction('keyval', 'readonly');
+              const req = tx.objectStore('keyval').get(key);
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => reject(req.error);
+            });
+          };
+
+          const idbData = await idbGet('lumiu_notes_store');
+          if (idbData) {
+            store = idbData;
+          } else {
+            const raw = localStorage.getItem('lumiu_notes_store');
+            if (raw) store = JSON.parse(raw);
+          }
+        }
+
+        if (store && store.notes) {
+          const mappedNotes: NoteFile[] = Object.values(store.notes).map((n: any) => {
+            const section = store.sections[n.sectionId] || {};
+            const notebook = store.notebooks[section.notebookId] || {};
+            
+            let mappedColor: NoteColor = "default";
+            if (n.color === "purple") mappedColor = "nebula";
+            else if (n.color === "blue") mappedColor = "void";
+            else if (n.color === "cyan") mappedColor = "void";
+            else if (n.color === "green") mappedColor = "aurora";
+            else if (n.color === "yellow") mappedColor = "comet";
+            else if (n.color === "orange") mappedColor = "comet";
+            else if (n.color === "red") mappedColor = "pulsar";
+            else if (n.color === "pink") mappedColor = "pulsar";
+            else if (n.color === "gray") mappedColor = "default";
+
+            return {
+              id: n.id,
+              title: n.title || "Untitled Note",
+              preview: n.plainText || "Start writing your note here...",
+              emoji: n.icon || "📄",
+              color: mappedColor,
+              notebook: notebook.name || "My Learning",
+              pinned: n.isPinned || false,
+              starred: n.isFavorite || false,
+              lastEdited: new Date(n.updatedAt || n.createdAt),
+              createdAt: new Date(n.createdAt),
+              wordCount: n.wordCount || 0,
+              tags: n.tags || [],
+              shared: false,
+            };
+          });
+          setNotes(mappedNotes);
+        }
+      } catch (err) {
+        console.error("Failed to load dynamic notes for dashboard:", err);
+      }
+    }
+    loadNotes();
+  }, []);
   const [search, setSearch]       = useState("");
   const [category, setCategory]   = useState<NoteCategory>("all");
   const [viewMode, setViewMode]   = useState<ViewMode>("grid");
@@ -795,10 +876,10 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                     </div>
                     {viewMode === "grid"
                       ? <div className="notes-grid">
-                          {pinnedNotes.map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="grid" onOpen={()=>{}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
+                          {pinnedNotes.map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="grid" onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
                         </div>
                       : <div className="notes-list">
-                          {pinnedNotes.map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="list" onOpen={()=>{}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
+                          {pinnedNotes.map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="list" onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
                         </div>
                     }
                   </div>
@@ -814,10 +895,10 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
                     </div>
                     {viewMode === "grid"
                       ? <div className="notes-grid">
-                          {recentNotes.filter(n => !n.pinned).map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="grid" onOpen={()=>{}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
+                          {recentNotes.filter(n => !n.pinned).map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="grid" onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
                         </div>
                       : <div className="notes-list">
-                          {recentNotes.filter(n => !n.pinned).map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="list" onOpen={()=>{}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
+                          {recentNotes.filter(n => !n.pinned).map(n => <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="list" onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>)}
                         </div>
                     }
                   </div>
@@ -896,14 +977,14 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
               <div className="notes-grid" style={{ paddingTop: 14 }}>
                 {filteredNotes.map(n => (
                   <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="grid"
-                    onOpen={() => {}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>
+                    onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>
                 ))}
               </div>
             ) : (
               <div className="notes-list" style={{ paddingTop: 14 }}>
                 {filteredNotes.map(n => (
                   <NoteCard key={n.id} note={n} T={T} isDark={isDark} viewMode="list"
-                    onOpen={() => {}} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>
+                    onOpen={(id) => router.push(`/notes?noteId=${id}`)} onStar={handleStar} onPin={handlePin} onDelete={handleDelete}/>
                 ))}
               </div>
             )}
