@@ -191,37 +191,74 @@ function BarChart({ data, color, maxVal, labels, height = 140 }: { data: number[
 }
 
 // ─── Activity Heatmap ─────────────────────────────────────────────────────────
-function Heatmap({ T }: { T: any }) {
-  const hours = ["12a","3a","6a","9a","12p","3p","6p","9p"];
-  const days = ["M","T","W","T","F","S","S"];
-  const data = Array.from({length:7}, () => Array.from({length:24}, () => Math.random()<0.4 ? rand(1,4) : 0));
+function Heatmap({ T, data }: { T: any; data: number[][] }) {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const daysFull = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
   const getColor = (v: number) => {
     if (!v) return T.s2;
-    const alpha = [0.2, 0.45, 0.7, 1][v-1];
-    return `rgba(157,121,255,${alpha})`;
+    const alpha = [0.2, 0.45, 0.7, 1][v - 1];
+    return `rgba(157, 121, 255, ${alpha})`;
   };
+
   return (
     <div style={{ overflowX: "auto" }}>
-      <div style={{ display: "flex", gap: 4, marginBottom: 6, paddingLeft: 20 }}>
-        {hours.map((h,i) => <div key={i} style={{ width: 50, fontSize: 9, color: T.muted, textAlign: "center", flexShrink: 0 }}>{h}</div>)}
+      {/* Grid Header for Hours */}
+      <div style={{ display: "grid", gridTemplateColumns: "30px repeat(24, 1fr)", gap: "3px", marginBottom: "6px", alignItems: "center" }}>
+        <div /> {/* Spacer for weekday column */}
+        {Array.from({ length: 24 }).map((_, h) => {
+          const isLabelHour = h % 4 === 0;
+          const labelText = h === 0 ? "12a" : h === 12 ? "12p" : `${h % 12}${h < 12 ? "a" : "p"}`;
+          return (
+            <div
+              key={h}
+              style={{
+                fontSize: "8px",
+                color: T.muted,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                transform: "translateX(-20%)"
+              }}
+            >
+              {isLabelHour ? labelText : ""}
+            </div>
+          );
+        })}
       </div>
+
+      {/* Grid Rows for Days */}
       {data.map((row, d) => (
-        <div key={d} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
-          <div style={{ width: 14, fontSize: 10, color: T.muted, flexShrink: 0 }}>{days[d]}</div>
-          <div style={{ display: "flex", gap: 2, flexWrap: "nowrap" }}>
-            {row.map((v, h) => (
-              <div key={h} style={{
-                width: 10, height: 10, borderRadius: 2,
+        <div key={d} style={{ display: "grid", gridTemplateColumns: "30px repeat(24, 1fr)", gap: "3px", marginBottom: "3px", alignItems: "center" }}>
+          <div style={{ fontSize: "10px", color: T.muted, fontWeight: 600 }}>{days[d]}</div>
+          {row.map((v, h) => (
+            <div
+              key={h}
+              style={{
+                aspectRatio: "1",
+                borderRadius: "2px",
                 background: getColor(v),
-                transition: "background 0.3s",
-              }} title={`${days[d]} ${h}:00 — ${v ? `${v*25}min` : "no activity"}`} />
-            ))}
-          </div>
+                transition: "all 0.2s ease",
+              }}
+              title={`${daysFull[d]}, ${h === 0 ? "12 AM" : h === 12 ? "12 PM" : h % 12 + (h < 12 ? " AM" : " PM")} — ${v ? `${v * 15} mins of study` : "No activity"}`}
+            />
+          ))}
         </div>
       ))}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, paddingLeft: 18 }}>
+
+      {/* Legend */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, paddingLeft: 30 }}>
         <span style={{ fontSize: 10, color: T.muted }}>Less</span>
-        {[0.15,0.35,0.6,0.85,1].map((a,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: i===0?T.s2:`rgba(157,121,255,${a})` }}/>)}
+        {[0, 1, 2, 3, 4].map((v) => (
+          <div
+            key={v}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 2,
+              background: getColor(v)
+            }}
+          />
+        ))}
         <span style={{ fontSize: 10, color: T.muted }}>More</span>
       </div>
     </div>
@@ -229,14 +266,13 @@ function Heatmap({ T }: { T: any }) {
 }
 
 // ─── Streak Calendar ─────────────────────────────────────────────────────────
-function StreakCalendar({ T }: { T: any }) {
+function StreakCalendar({ T, activeDays }: { T: any; activeDays: Set<number> }) {
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
-  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
   const offset = firstDay === 0 ? 6 : firstDay - 1;
-  const activeDays = new Set(Array.from({length:18},()=>rand(1,daysInMonth)));
   const todayDate = today.getDate();
 
   const cells = [];
@@ -245,37 +281,73 @@ function StreakCalendar({ T }: { T: any }) {
 
   return (
     <div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:6 }}>
-        {["M","T","W","T","F","S","S"].map((d,i) => (
-          <div key={i} style={{ fontSize:10, color:T.muted, textAlign:"center", fontWeight:600 }}>{d}</div>
+      {/* Weekday Headers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
+          <div key={i} style={{ fontSize: 10, color: T.muted, textAlign: "center", fontWeight: 600 }}>{d}</div>
         ))}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
+
+      {/* Calendar Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
         {cells.map((d, i) => {
           if (d === null) return <div key={i} />;
+          
           const isToday = d === todayDate;
-          const isActive = activeDays.has(d) && d < todayDate;
+          const isActive = activeDays.has(d);
+          
+          let bg = T.s2;
+          let textColor = T.muted;
+          let border = `1px solid ${T.border}`;
+          let fontWeight = 400;
+
+          if (isToday) {
+            bg = "#9D79FF";
+            textColor = "white";
+            border = "1px solid #9D79FF";
+            fontWeight = 700;
+          } else if (isActive) {
+            bg = "rgba(157, 121, 255, 0.22)";
+            textColor = "#9D79FF";
+            border = "1px solid rgba(157, 121, 255, 0.4)";
+            fontWeight = 600;
+          }
+
           return (
-            <div key={i} style={{
-              width: "100%", aspectRatio: "1", borderRadius: 6,
-              background: isToday ? "#9D79FF" : isActive ? "rgba(157,121,255,0.25)" : T.s2,
-              display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize: 11, fontWeight: isToday?700:400,
-              color: isToday?"white": isActive?"#9D79FF": T.muted,
-              border: isToday?`2px solid #9D79FF`:`1px solid ${T.border}`,
-              transition:"all 0.2s",
-            }}>{d}</div>
+            <div
+              key={i}
+              className="calendar-day-cell"
+              style={{
+                width: "100%",
+                aspectRatio: "1",
+                borderRadius: 8,
+                background: bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: fontWeight,
+                color: textColor,
+                border: border,
+                cursor: "pointer",
+                transition: "all 0.2s ease-in-out",
+              }}
+            >
+              {d}
+            </div>
           );
         })}
       </div>
-      <div style={{ display:"flex", gap:16, marginTop:10 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-          <div style={{ width:10, height:10, borderRadius:3, background:"rgba(157,121,255,0.25)" }}/>
-          <span style={{ fontSize:10, color:T.muted }}>Active day</span>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 3, background: "rgba(157, 121, 255, 0.22)", border: "1px solid rgba(157, 121, 255, 0.4)" }} />
+          <span style={{ fontSize: 10, color: T.muted }}>Active day</span>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-          <div style={{ width:10, height:10, borderRadius:3, background:"#9D79FF" }}/>
-          <span style={{ fontSize:10, color:T.muted }}>Today</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 3, background: "#9D79FF", border: "1px solid #9D79FF" }} />
+          <span style={{ fontSize: 10, color: T.muted }}>Today</span>
         </div>
       </div>
     </div>
@@ -299,6 +371,168 @@ export default function LumIUAnalytics() {
   // Generate data based on range
   const n = range === "7d" ? 7 : range === "30d" ? 30 : 90;
   const data = useMemo(() => genStudyData(n), [range]);
+
+  const streakInfo = useMemo(() => {
+    if (typeof window === "undefined" || !mounted) {
+      return { currentStreak: 7, activeDaysSet: new Set<number>() };
+    }
+    
+    try {
+      const focusHist = JSON.parse(localStorage.getItem("lumiu-focus-history") || "[]");
+      const cardHist = JSON.parse(localStorage.getItem("lumiu-flashcard-history") || "[]");
+      const quizHist = JSON.parse(localStorage.getItem("lumiu-quiz-history") || "[]");
+      const gameHist = JSON.parse(localStorage.getItem("lumiu-game-history") || "[]");
+
+      const timestamps: number[] = [];
+      focusHist.forEach((x: any) => timestamps.push(x.timestamp));
+      cardHist.forEach((x: any) => timestamps.push(x.timestamp));
+      quizHist.forEach((x: any) => timestamps.push(x.timestamp));
+      gameHist.forEach((x: any) => timestamps.push(x.timestamp));
+
+      // Unique YYYY-MM-DD local strings
+      const uniqueDates = new Set<string>();
+      const activeDaysThisMonth = new Set<number>();
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+
+      timestamps.forEach(ts => {
+        const d = new Date(ts);
+        const yyyymmdd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        uniqueDates.add(yyyymmdd);
+
+        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+          activeDaysThisMonth.add(d.getDate());
+        }
+      });
+
+      // Calculate streak walking back day by day
+      let currentStreak = 0;
+      const formatLocalDate = (d: Date) => {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      const todayStr = formatLocalDate(today);
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const yesterdayStr = formatLocalDate(yesterday);
+
+      const hasStudiedToday = uniqueDates.has(todayStr);
+      const hasStudiedYesterday = uniqueDates.has(yesterdayStr);
+
+      if (hasStudiedToday || hasStudiedYesterday) {
+        currentStreak = 1;
+        let checkDate = new Date(hasStudiedToday ? today : yesterday);
+        
+        while (true) {
+          checkDate.setDate(checkDate.getDate() - 1);
+          const checkStr = formatLocalDate(checkDate);
+          if (uniqueDates.has(checkStr)) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Beautiful fallback mockup if user has absolutely no history yet (keeps preview alive)
+      if (timestamps.length === 0) {
+        const todayDate = today.getDate();
+        const mockActive = new Set<number>();
+        // Mock 7-day streak ending today
+        for (let i = 0; i < 7; i++) {
+          const d = todayDate - i;
+          if (d > 0) mockActive.add(d);
+        }
+        // Scattered active days earlier
+        mockActive.add(Math.max(1, todayDate - 10));
+        mockActive.add(Math.max(1, todayDate - 12));
+        mockActive.add(Math.max(1, todayDate - 15));
+
+        return { currentStreak: 7, activeDaysSet: mockActive };
+      }
+
+      return { currentStreak, activeDaysSet: activeDaysThisMonth };
+    } catch (e) {
+      console.error("Error calculating streak:", e);
+      return { currentStreak: 7, activeDaysSet: new Set<number>() };
+    }
+  }, [mounted]);
+
+  const heatmapData = useMemo(() => {
+    if (typeof window === "undefined" || !mounted) {
+      return Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    }
+
+    try {
+      const today = new Date();
+      // Start of current week (Monday)
+      const monday = new Date(today);
+      const day = today.getDay();
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+      monday.setDate(diff);
+      monday.setHours(0, 0, 0, 0);
+
+      // Fetch actual logs
+      let logs: { timestamp: number; value: number }[] = [];
+      const focusHist = JSON.parse(localStorage.getItem("lumiu-focus-history") || "[]");
+      const cardHist = JSON.parse(localStorage.getItem("lumiu-flashcard-history") || "[]");
+      const quizHist = JSON.parse(localStorage.getItem("lumiu-quiz-history") || "[]");
+      const gameHist = JSON.parse(localStorage.getItem("lumiu-game-history") || "[]");
+
+      focusHist.forEach((x: any) => logs.push({ timestamp: x.timestamp, value: x.duration || 25 }));
+      cardHist.forEach((x: any) => logs.push({ timestamp: x.timestamp, value: 10 }));
+      quizHist.forEach((x: any) => logs.push({ timestamp: x.timestamp, value: 15 }));
+      gameHist.forEach((x: any) => logs.push({ timestamp: x.timestamp, value: 10 }));
+
+      // Check if we have any real logs in the current week
+      const weekStartMs = monday.getTime();
+      const weekEndMs = weekStartMs + 7 * 86400000;
+      const hasRealLogs = logs.some(l => l.timestamp >= weekStartMs && l.timestamp < weekEndMs);
+
+      // Build 7 rows x 24 columns
+      return Array.from({ length: 7 }, (_, dIndex) => {
+        const dayStart = new Date(monday);
+        dayStart.setDate(monday.getDate() + dIndex);
+        const dayStartMs = dayStart.getTime();
+
+        return Array.from({ length: 24 }, (_, hIndex) => {
+          const hourStartMs = dayStartMs + hIndex * 3600000;
+          const hourEndMs = hourStartMs + 3600000;
+
+          // Find actual logs in this hour
+          const hourLogs = logs.filter(l => l.timestamp >= hourStartMs && l.timestamp < hourEndMs);
+          if (hourLogs.length > 0) {
+            const totalVal = hourLogs.reduce((a, c) => a + c.value, 0);
+            if (totalVal > 30) return 4;
+            if (totalVal > 15) return 3;
+            if (totalVal > 5) return 2;
+            return 1;
+          }
+
+          // Fallback beautiful mockup if there are NO real logs in the entire week
+          if (!hasRealLogs) {
+            const isWeekend = dIndex >= 5; // Sat, Sun
+            const baseProb = isWeekend ? 0.15 : 0.35;
+            
+            // Peak hours: 9am-12pm (9-11), 2pm-5pm (14-17), 7pm-9pm (19-21)
+            const isPeak = (hIndex >= 9 && hIndex <= 11) || (hIndex >= 14 && hIndex <= 17) || (hIndex >= 19 && hIndex <= 21);
+            const prob = isPeak ? baseProb * 2.2 : baseProb * 0.4;
+            
+            const hash = Math.abs(Math.sin(dIndex * 31 + hIndex * 17));
+            if (hash < prob) {
+              return Math.floor(hash * 4) + 1; // 1 to 4
+            }
+          }
+
+          return 0;
+        });
+      });
+    } catch (e) {
+      console.error(e);
+      return Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    }
+  }, [mounted]);
 
   const totalXP     = data.reduce((a,d) => a+d.xp, 0);
   const totalMins   = data.reduce((a,d) => a+d.minutes, 0);
@@ -451,6 +685,11 @@ export default function LumIUAnalytics() {
 .anim-in-5{animation:fade-up 0.4s 0.25s ease both;}
 scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(157,121,255,0.3);border-radius:4px;}
+.calendar-day-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(157, 121, 255, 0.15);
+  border-color: rgba(157, 121, 255, 0.8) !important;
+}
 `;
 
   const dayLabels = data.map((_, i) => {
@@ -796,7 +1035,7 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
         <div className="card">
           <div className="card-title">Activity Heatmap</div>
           <div className="card-sub">Hourly study intensity this week</div>
-          <Heatmap T={T}/>
+          <Heatmap T={T} data={heatmapData}/>
         </div>
 
         {/* Streak calendar */}
@@ -807,11 +1046,11 @@ scrollbar-width:thin;scrollbar-color:rgba(157,121,255,0.3) transparent;
               <div className="card-sub">Keep it up! 🔥</div>
             </div>
             <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:26, fontWeight:700, color:T.amber, letterSpacing:"-0.5px" }}>7</div>
+              <div style={{ fontSize:26, fontWeight:700, color:T.amber, letterSpacing:"-0.5px" }}>{streakInfo.currentStreak}</div>
               <div style={{ fontSize:10, color:T.muted, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" }}>Day streak</div>
             </div>
           </div>
-          <StreakCalendar T={T}/>
+          <StreakCalendar T={T} activeDays={streakInfo.activeDaysSet}/>
         </div>
       </div>
 
